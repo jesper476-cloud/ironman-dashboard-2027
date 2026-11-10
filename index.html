@@ -1,1 +1,198 @@
 
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ironman Dashboard 2027</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;background:#10151d;color:#f4f6fa;
+ font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;
+ padding:20px;max-width:850px;margin:auto
+}
+header{padding:20px 0}
+.tag{color:#ff795c;font-size:12px;font-weight:bold;letter-spacing:2px}
+h1{font-size:30px;margin:8px 0}
+.sub{color:#929cab;font-size:14px}
+h2{font-size:18px;margin:26px 0 14px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.card{
+ background:#1b2430;border:1px solid #303c4b;
+ border-radius:15px;padding:17px
+}
+.card small{color:#a4afbd}
+.value{font-size:27px;font-weight:750;margin:10px 0}
+.unit{font-size:13px;color:#a4afbd}
+.accent{color:#ff795c}
+.wide{margin-top:12px}
+.progress{height:9px;background:#303c4b;border-radius:20px;overflow:hidden;margin-top:12px}
+.bar{height:100%;width:0;background:#ff795c;border-radius:20px}
+input{
+ width:100%;padding:12px;background:#101923;
+ color:white;border:1px solid #405064;border-radius:9px;
+ font-size:16px;margin:7px 0 13px
+}
+button{
+ background:#ff795c;color:#171a20;border:0;
+ border-radius:10px;padding:13px 18px;
+ font-weight:bold;font-size:15px;width:100%
+}
+.activity{padding:13px 0;border-bottom:1px solid #303c4b;color:#b9c3cf}
+.activity strong{color:white}
+.note{color:#929cab;font-size:12px;line-height:1.5}
+footer{padding:30px 0;color:#778394;text-align:center;font-size:12px}
+@media(min-width:600px){.grid{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+
+<header>
+ <div class="tag">ROAD TO IRONMAN</div>
+ <h1>IRONMAN <span class="accent">2027</span></h1>
+ <div class="sub">Personlig träningsdashboard · Jönköping</div>
+</header>
+
+<div class="grid">
+ <div class="card">
+  <small>🚴 CYKLING</small>
+  <div class="value" id="bike">0 <span class="unit">km</span></div>
+  <small>Total distans</small>
+ </div>
+ <div class="card">
+  <small>🏃 LÖPNING</small>
+  <div class="value" id="run">0 <span class="unit">km</span></div>
+  <small>Total distans</small>
+ </div>
+ <div class="card">
+  <small>🏊 SIMNING</small>
+  <div class="value" id="swim">0 <span class="unit">km</span></div>
+  <small>Total distans</small>
+ </div>
+</div>
+
+<h2>Din träningsstatus</h2>
+<div class="grid">
+ <div class="card">
+  <small>FTP</small>
+  <div class="value" id="ftp">0 W</div>
+ </div>
+ <div class="card">
+  <small>VO2 MAX</small>
+  <div class="value" id="vo2">0</div>
+ </div>
+ <div class="card">
+  <small>TRÄNINGSTIMMAR</small>
+  <div class="value" id="hours">0 h</div>
+ </div>
+</div>
+
+<h2>Veckans träning</h2>
+<div class="card">
+ <div style="display:flex;justify-content:space-between">
+  <small>Tränade timmar</small>
+  <strong id="weekText">0 / 10 h</strong>
+ </div>
+ <div class="progress"><div class="bar" id="weekBar"></div></div>
+ <p class="note">Målet är inställt på 10 timmar per vecka. Ändra i inställningarna nedan.</p>
+</div>
+
+<h2>Senaste aktiviteter</h2>
+<div class="card" id="activities">
+ <div class="activity">Inga aktiviteter registrerade ännu.</div>
+</div>
+
+<h2>Strava</h2>
+<div class="card">
+ <div style="font-size:25px">🔴</div>
+ <strong>Strava-anslutning</strong>
+ <p class="note">Nästa steg är att koppla ditt Strava-konto så att aktiviteter och träningsdata kan hämtas automatiskt.</p>
+ <div class="note">Status: Inte ansluten</div>
+</div>
+
+<h2>Lägg till träningsdata</h2>
+<div class="card">
+ <label>Träningsform</label>
+ <select id="sport" style="width:100%;padding:12px;background:#101923;color:white;border:1px solid #405064;border-radius:9px">
+  <option value="bike">Cykling</option>
+  <option value="run">Löpning</option>
+  <option value="swim">Simning</option>
+ </select>
+ <label>Distans (km)</label>
+ <input id="distance" type="number" step="0.1" min="0" placeholder="Exempel: 25">
+ <label>Träningstid (minuter)</label>
+ <input id="duration" type="number" min="0" placeholder="Exempel: 60">
+ <button onclick="addActivity()">Spara träning</button>
+ <p class="note">Dina manuellt registrerade aktiviteter sparas i webbläsaren på denna enhet.</p>
+</div>
+
+<h2>Inställningar</h2>
+<div class="card">
+ <label>FTP (watt)</label>
+ <input id="ftpInput" type="number" placeholder="Ange FTP">
+ <label>VO2 max</label>
+ <input id="vo2Input" type="number" step="0.1" placeholder="Ange VO2 max">
+ <label>Veckomål (timmar)</label>
+ <input id="goalInput" type="number" value="10" min="1">
+ <button onclick="saveSettings()">Spara inställningar</button>
+</div>
+
+<footer>
+ IRONMAN JÖNKÖPING 2027<br>
+ YOUR JOURNEY · YOUR DATA · YOUR FINISH LINE
+</footer>
+
+<script>
+let data=JSON.parse(localStorage.getItem("ironmanData")||'{"bike":0,"run":0,"swim":0,"hours":0,"activities":[],"ftp":0,"vo2":0,"goal":10}');
+
+function render(){
+ document.getElementById("bike").innerHTML=data.bike.toFixed(1)+' <span class="unit">km</span>';
+ document.getElementById("run").innerHTML=data.run.toFixed(1)+' <span class="unit">km</span>';
+ document.getElementById("swim").innerHTML=data.swim.toFixed(2)+' <span class="unit">km</span>';
+ document.getElementById("ftp").textContent=data.ftp+" W";
+ document.getElementById("vo2").textContent=data.vo2;
+ document.getElementById("hours").textContent=data.hours.toFixed(1)+" h";
+ document.getElementById("weekText").textContent=data.hours.toFixed(1)+" / "+data.goal+" h";
+ document.getElementById("weekBar").style.width=Math.min(100,data.hours/data.goal*100)+"%";
+ document.getElementById("ftpInput").value=data.ftp||"";
+ document.getElementById("vo2Input").value=data.vo2||"";
+ document.getElementById("goalInput").value=data.goal;
+ let list=document.getElementById("activities");
+ list.innerHTML="";
+ if(!data.activities.length) list.innerHTML='<div class="activity">Inga aktiviteter registrerade ännu.</div>';
+ data.activities.slice(0,8).forEach(a=>{
+  let div=document.createElement("div");
+  div.className="activity";
+  div.textContent=a.sport+" · "+a.distance+" km · "+a.duration+" min";
+  list.appendChild(div);
+ });
+}
+function persist(){localStorage.setItem("ironmanData",JSON.stringify(data));render()}
+function addActivity(){
+ let sport=document.getElementById("sport").value;
+ let distance=Number(document.getElementById("distance").value);
+ let duration=Number(document.getElementById("duration").value);
+ if(!Number.isFinite(distance)||!Number.isFinite(duration)||distance<=0||duration<=0){
+  alert("Fyll i både distans och träningstid.");
+  return;
+ }
+ data[sport]+=distance;
+ data.hours+=duration/60;
+ data.activities.unshift({sport:sport,distance:distance,duration:duration});
+ document.getElementById("distance").value="";
+ document.getElementById("duration").value="";
+ persist();
+}
+function saveSettings(){
+ data.ftp=Number(document.getElementById("ftpInput").value)||0;
+ data.vo2=Number(document.getElementById("vo2Input").value)||0;
+ data.goal=Math.max(1,Number(document.getElementById("goalInput").value)||10);
+ persist();
+ alert("Inställningarna är sparade!");
+}
+render();
+</script>
+</body>
+</html>
+
